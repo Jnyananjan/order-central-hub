@@ -29,6 +29,7 @@ interface OrderContextType {
   fetchOrders: () => Promise<void>;
   fetchUserOrders: (email: string) => Promise<void>;
   addOrder: (order: Omit<Order, 'id' | 'created_at'>) => Promise<Order | null>;
+  cancelOrder: (orderId: string) => Promise<boolean>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -101,6 +102,34 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const cancelOrder = async (orderId: string): Promise<boolean> => {
+    if (!supabaseConfigured) {
+      console.warn('Supabase not configured');
+      return false;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: 'cancelled' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+      ));
+      setUserOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+      ));
+      return true;
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      return false;
+    }
+  };
+
   // Set up real-time subscription for orders
   useEffect(() => {
     if (!supabaseConfigured) return;
@@ -144,7 +173,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       loading,
       fetchOrders,
       fetchUserOrders,
-      addOrder
+      addOrder,
+      cancelOrder
     }}>
       {children}
     </OrderContext.Provider>
