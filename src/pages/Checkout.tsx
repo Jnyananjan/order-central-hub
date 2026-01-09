@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOrders } from '@/contexts/OrderContext';
 import { useToast } from '@/hooks/use-toast';
 import { RAZORPAY_KEY_ID, razorpayConfigured } from '@/config/razorpay';
@@ -20,6 +21,7 @@ declare global {
 
 const Checkout = () => {
   const { items, totalPrice, clearCart, setHasOrdered } = useCart();
+  const { user } = useAuth();
   const { addOrder } = useOrders();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -28,7 +30,7 @@ const Checkout = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
+    email: user?.email || '',
     phone: '',
     address: '',
     city: '',
@@ -61,6 +63,16 @@ const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: 'Sign In Required',
+        description: 'Please sign in to complete your order.',
+        variant: 'destructive'
+      });
+      navigate('/auth');
+      return;
+    }
+
     if (!razorpayConfigured) {
       toast({
         title: 'Razorpay Not Configured',
@@ -118,6 +130,12 @@ const Checkout = () => {
         setHasOrdered(true);
         navigate('/payment-success', { state: { orderId, paymentId: response.razorpay_payment_id } });
       },
+      modal: {
+        ondismiss: function() {
+          setIsProcessing(false);
+          navigate('/payment-failed');
+        }
+      },
       prefill: {
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
@@ -127,9 +145,28 @@ const Checkout = () => {
     };
 
     const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', function() {
+      navigate('/payment-failed');
+    });
     razorpay.open();
     setIsProcessing(false);
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar />
+        <main className="flex-1 pt-24 pb-16 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="font-display text-2xl font-bold mb-4">Sign In Required</h1>
+            <p className="text-muted-foreground mb-6">Please sign in to proceed with checkout.</p>
+            <Link to="/auth"><Button>Sign In</Button></Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

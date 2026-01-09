@@ -44,7 +44,7 @@ const Footer = () => {
     <footer className="py-12 sm:py-16 border-t border-border/50 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12">
           {/* Brand */}
           <div>
             <Link to="/" className="font-display font-bold text-xl tracking-tight mb-4 block">
@@ -69,6 +69,17 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Quick Links</h3>
+            <ul className="space-y-3">
+              <li><Link to="/setup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Setup Guide</Link></li>
+              <li><Link to="/updates" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Updates</Link></li>
+              <li><Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link></li>
+              <li><Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground transition-colors">My Orders</Link></li>
             </ul>
           </div>
 
@@ -103,6 +114,9 @@ const Footer = () => {
             </Link>
             <Link to="/updates" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Updates
+            </Link>
+            <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Contact
             </Link>
             <Link to="/cart" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Cart

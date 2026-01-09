@@ -5,8 +5,25 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 
+const downloadLinks = {
+  windows: 'https://example.com/downloads/macropad-windows.exe',
+  macos: 'https://example.com/downloads/macropad-macos.dmg',
+  linux: 'https://example.com/downloads/macropad-linux.AppImage'
+};
+
 const steps = [
-  { icon: Download, title: 'Download the Software', description: 'Get the MacroPad Configurator from our official website. Available for Windows, macOS, and Linux.' },
+  { 
+    icon: Download, 
+    title: 'Download the Software', 
+    description: (
+      <>
+        Get the MacroPad Configurator from our official website. Available for{' '}
+        <a href={downloadLinks.windows} className="text-blue-500 hover:text-blue-400 font-semibold underline underline-offset-2">Windows</a>,{' '}
+        <a href={downloadLinks.macos} className="text-blue-500 hover:text-blue-400 font-semibold underline underline-offset-2">macOS</a>, and{' '}
+        <a href={downloadLinks.linux} className="text-blue-500 hover:text-blue-400 font-semibold underline underline-offset-2">Linux</a>.
+      </>
+    )
+  },
   { icon: Settings, title: 'Connect Your Device', description: 'Plug in your MacroPad via USB-C. The software will automatically detect your device.' },
   { icon: Keyboard, title: 'Configure Your Keys', description: 'Assign macros, shortcuts, and custom functions to each key. Customize the display to show what you need.' },
   { icon: CheckCircle, title: 'Start Using', description: 'Save your configuration and start boosting your productivity. Your settings sync across devices.' },

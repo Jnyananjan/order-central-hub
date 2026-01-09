@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, LogOut, Home, User, ArrowLeft, Package } from 'lucide-react';
+import { ShoppingCart, Menu, X, LogOut, Home, User, Package } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
@@ -15,10 +15,19 @@ const Navbar = () => {
 
   const isHomePage = location.pathname === '/';
 
+  // Get display name from user metadata or email
+  const getDisplayName = () => {
+    if (!user) return '';
+    const fullName = user.user_metadata?.full_name;
+    if (fullName) return fullName.split(' ')[0]; // First name only
+    return user.email?.split('@')[0] || 'User';
+  };
+
   const navLinks = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Setup', href: '/setup' },
     { name: 'Updates', href: '/updates' },
+    { name: 'Contact', href: '/contact' },
     { name: 'Orders', href: '/orders', icon: Package },
   ];
 
@@ -78,7 +87,7 @@ const Navbar = () => {
             {user ? (
               <>
                 <span className="hidden md:inline text-sm text-muted-foreground">
-                  {user.email?.split('@')[0]}
+                  {getDisplayName()}
                 </span>
                 <Button
                   variant="ghost"
@@ -133,7 +142,7 @@ const Navbar = () => {
 
                 {user ? (
                   <div className="px-4 pt-3 border-t border-border/30">
-                    <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
+                    <p className="text-sm text-muted-foreground mb-2">Hello, {getDisplayName()}</p>
                     <Button
                       variant="outline"
                       size="sm"
