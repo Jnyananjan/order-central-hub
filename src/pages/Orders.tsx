@@ -1,22 +1,77 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, ArrowLeft } from 'lucide-react';
+import { Package, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { useOrders } from '@/contexts/OrderContext';
+import { useOrders, Order } from '@/contexts/OrderContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Orders = () => {
-  const { userOrders, fetchUserOrders, loading } = useOrders();
+  const { userOrders, fetchUserOrders, loading, cancelOrder } = useOrders();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.email) {
       fetchUserOrders(user.email);
     }
   }, [user]);
+
+  const handleCancelOrder = async (order: Order) => {
+    if (order.order_status !== 'confirmed' && order.order_status !== 'pending') {
+      toast({
+        title: 'Cannot Cancel',
+        description: 'This order cannot be cancelled as it is already being processed.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setCancellingId(order.id);
+    const success = await cancelOrder(order.id);
+    
+    if (success) {
+      toast({
+        title: 'Order Cancelled',
+        description: 'Your order has been cancelled successfully.',
+      });
+      if (user?.email) {
+        fetchUserOrders(user.email);
+      }
+    } else {
+      toast({
+        title: 'Cancellation Failed',
+        description: 'Unable to cancel the order. Please try again or contact support.',
+        variant: 'destructive'
+      });
+    }
+    setCancellingId(null);
+  };
+
+  const canCancel = (status: string) => {
+    return status === 'confirmed' || status === 'pending';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500/20 text-green-500';
+      case 'pending':
+        return 'bg-yellow-500/20 text-yellow-500';
+      case 'cancelled':
+        return 'bg-red-500/20 text-red-500';
+      case 'shipped':
+        return 'bg-blue-500/20 text-blue-500';
+      case 'delivered':
+        return 'bg-purple-500/20 text-purple-500';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -61,7 +116,7 @@ const Orders = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Status</p>
-                      <span className="inline-block px-3 py-1 bg-success/20 text-success rounded-full text-sm font-medium">
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium capitalize ${getStatusColor(order.order_status)}`}>
                         {order.order_status}
                       </span>
                     </div>
@@ -71,7 +126,21 @@ const Orders = () => {
                       <p className="font-medium">{order.product_name}</p>
                       <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                     </div>
-                    <p className="font-display font-bold text-xl">${order.total_amount}</p>
+                    <div className="flex items-center gap-4">
+                      <p className="font-display font-bold text-xl">${order.total_amount}</p>
+                      {canCancel(order.order_status) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelOrder(order)}
+                          disabled={cancellingId === order.id}
+                          className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="w-4 h-4" />
+                          {cancellingId === order.id ? 'Cancelling...' : 'Cancel'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -24,8 +24,19 @@ const Updates = () => (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {updates.map((update, index) => (
             <motion.div key={update.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} className="glass-card overflow-hidden group">
-              <div className="aspect-video overflow-hidden"><img src={update.image} alt={update.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
-              <div className="p-6"><p className="text-sm text-muted-foreground mb-2">{update.date}</p><h3 className="font-display text-lg font-semibold mb-2">{update.title}</h3><p className="text-muted-foreground text-sm">{update.description}</p></div>
+              <Link to={`/updates/${update.id}`}>
+                <div className="aspect-video overflow-hidden">
+                  <img src={update.image} alt={update.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+                <div className="p-6">
+                  <p className="text-sm text-muted-foreground mb-2">{update.date}</p>
+                  <h3 className="font-display text-lg font-semibold mb-2">{update.title}</h3>
+                  <p className="text-muted-foreground text-sm mb-4">{update.description}</p>
+                  <span className="text-blue-500 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Read More <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>
