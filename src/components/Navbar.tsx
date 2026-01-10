@@ -1,15 +1,18 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, LogOut, Home, User, Package } from 'lucide-react';
+import { ShoppingCart, Menu, X, LogOut, Home, User, Package, Globe } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Button } from '@/components/ui/button';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showCurrency, setShowCurrency] = useState(false);
   const { itemCount } = useCart();
   const { user, signOut } = useAuth();
+  const { currency, setCurrency, currencies } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -66,7 +69,7 @@ const Navbar = () => {
             onClick={handleHomeClick}
             className="font-display font-bold text-xl tracking-tight absolute left-1/2 -translate-x-1/2"
           >
-            Macro Pad
+            Techy Pad
           </a>
 
           {/* Desktop Navigation */}
@@ -84,6 +87,37 @@ const Navbar = () => {
 
           {/* Right Side - Cart & Auth */}
           <div className="flex items-center gap-4">
+            {/* Currency Selector - Desktop */}
+            <div className="hidden md:block relative">
+              <button
+                onClick={() => setShowCurrency(!showCurrency)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Globe className="w-4 h-4" />
+                {currency.code}
+              </button>
+              <AnimatePresence>
+                {showCurrency && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 mt-2 w-40 bg-card border border-border rounded-lg shadow-lg py-2 z-50"
+                  >
+                    {currencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => { setCurrency(c); setShowCurrency(false); }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-secondary transition-colors ${c.code === currency.code ? 'text-foreground font-medium' : 'text-muted-foreground'}`}
+                      >
+                        {c.symbol} {c.code}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {user ? (
               <>
                 <span className="hidden md:inline text-sm text-muted-foreground">
@@ -139,6 +173,25 @@ const Navbar = () => {
                     {link.name}
                   </Link>
                 ))}
+
+                {/* Currency Selector - Mobile */}
+                <div className="px-4 py-2">
+                  <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                    <Globe className="w-4 h-4" />
+                    Currency
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {currencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCurrency(c)}
+                        className={`px-3 py-1 rounded-full text-sm border transition-colors ${c.code === currency.code ? 'bg-foreground text-background border-foreground' : 'border-border text-muted-foreground hover:border-foreground'}`}
+                      >
+                        {c.symbol} {c.code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {user ? (
                   <div className="px-4 pt-3 border-t border-border/30">

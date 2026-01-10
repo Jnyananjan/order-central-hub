@@ -2,12 +2,18 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Link, useNavigate } from 'react-router-dom';
 import macropadHero from '@/assets/macropad-hero.png';
+
+const ORIGINAL_PRICE = 10000; // INR
+const SALE_PRICE = 7499; // INR
+const DISCOUNT_PERCENT = Math.round(((ORIGINAL_PRICE - SALE_PRICE) / ORIGINAL_PRICE) * 100);
 
 const Hero = () => {
   const { addToCart, isInCart, hasOrdered } = useCart();
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const handlePreOrder = () => {
@@ -15,11 +21,11 @@ const Hero = () => {
       navigate('/auth');
       return;
     }
-    if (!isInCart('macropad-pro') && !hasOrdered) {
+    if (!isInCart('techypad-pro') && !hasOrdered) {
       addToCart({
-        id: 'macropad-pro',
-        name: 'MacroPad Pro',
-        price: 149,
+        id: 'techypad-pro',
+        name: 'Techy Pad',
+        price: SALE_PRICE,
         image: macropadHero
       });
     }
@@ -54,11 +60,25 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-lg text-muted-foreground mb-8 max-w-lg"
+              className="text-lg text-muted-foreground mb-6 max-w-lg"
             >
               A premium macro pad featuring a built-in LCD display, programmable keys,
               and endless customization. Designed for creators, developers, and power users.
             </motion.p>
+
+            {/* Price Display */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="mb-8 flex items-center gap-4"
+            >
+              <span className="text-3xl font-bold text-foreground">{formatPrice(SALE_PRICE)}</span>
+              <span className="text-xl text-muted-foreground line-through">{formatPrice(ORIGINAL_PRICE)}</span>
+              <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm font-semibold">
+                {DISCOUNT_PERCENT}% OFF
+              </span>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -74,7 +94,7 @@ const Hero = () => {
                 >
                   Already Ordered
                 </Button>
-              ) : isInCart('macropad-pro') ? (
+              ) : isInCart('techypad-pro') ? (
                 <Link to="/cart">
                   <Button
                     size="lg"
@@ -89,7 +109,7 @@ const Hero = () => {
                   className="text-base px-10 bg-foreground text-background hover:bg-foreground/90 font-semibold"
                   onClick={handlePreOrder}
                 >
-                  {user ? 'Pre-Order Now — $149' : 'Sign In to Pre-Order'}
+                  {user ? `Pre-Order Now — ${formatPrice(SALE_PRICE)}` : 'Sign In to Pre-Order'}
                 </Button>
               )}
               <a href="#features">
@@ -112,7 +132,7 @@ const Hero = () => {
               <div className="relative bg-background">
                 <img
                   src={macropadHero}
-                  alt="MacroPad Pro"
+                  alt="Techy Pad"
                   className="w-full h-full object-contain mix-blend-lighten"
                 />
               </div>
@@ -134,7 +154,7 @@ const Hero = () => {
               <div className="relative bg-background">
                 <img
                   src={macropadHero}
-                  alt="MacroPad Pro"
+                  alt="Techy Pad"
                   className="w-full h-full object-contain mix-blend-lighten"
                 />
               </div>
@@ -162,11 +182,25 @@ const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-base sm:text-lg text-muted-foreground mb-8 max-w-lg mx-auto"
+              className="text-base sm:text-lg text-muted-foreground mb-6 max-w-lg mx-auto"
             >
               A premium macro pad featuring a built-in LCD display, programmable keys,
               and endless customization. Designed for creators, developers, and power users.
             </motion.p>
+
+            {/* Price Display Mobile */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              className="mb-8 flex items-center justify-center gap-3 flex-wrap"
+            >
+              <span className="text-2xl sm:text-3xl font-bold text-foreground">{formatPrice(SALE_PRICE)}</span>
+              <span className="text-lg text-muted-foreground line-through">{formatPrice(ORIGINAL_PRICE)}</span>
+              <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm font-semibold">
+                {DISCOUNT_PERCENT}% OFF
+              </span>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -182,7 +216,7 @@ const Hero = () => {
                 >
                   Already Ordered
                 </Button>
-              ) : isInCart('macropad-pro') ? (
+              ) : isInCart('techypad-pro') ? (
                 <Link to="/cart">
                   <Button
                     size="lg"
@@ -197,7 +231,7 @@ const Hero = () => {
                   className="text-base px-10 bg-foreground text-background hover:bg-foreground/90 font-semibold"
                   onClick={handlePreOrder}
                 >
-                  {user ? 'Pre-Order Now — $149' : 'Sign In to Pre-Order'}
+                  {user ? `Pre-Order Now — ${formatPrice(SALE_PRICE)}` : 'Sign In to Pre-Order'}
                 </Button>
               )}
               <a href="#features">

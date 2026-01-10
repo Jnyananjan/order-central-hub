@@ -48,7 +48,7 @@ const Footer = () => {
           {/* Brand */}
           <div>
             <Link to="/" className="font-display font-bold text-xl tracking-tight mb-4 block">
-              Macro Pad
+              Techy Pad
             </Link>
             <p className="text-muted-foreground text-sm max-w-xs">
               The premium macro pad designed for creators, developers, and power users.
@@ -106,7 +106,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border/30 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © 2025 Macro Pad. All rights reserved.
+            © 2025 Techy Pad. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link to="/setup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
