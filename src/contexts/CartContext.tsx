@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CartItem {
   id: string;
@@ -18,20 +19,47 @@ interface CartContextType {
   itemCount: number;
   hasOrdered: boolean;
   setHasOrdered: (value: boolean) => void;
+  checkUserOrdered: (email: string) => boolean;
+  markUserOrdered: (email: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [hasOrdered, setHasOrdered] = useState(() => {
-    const saved = localStorage.getItem('hasOrdered');
-    return saved === 'true';
+  const [orderedUsers, setOrderedUsers] = useState<string[]>(() => {
+    const saved = localStorage.getItem('orderedUsers');
+    return saved ? JSON.parse(saved) : [];
   });
 
+  const { user } = useAuth();
+
+  // Check if current user has ordered
+  const hasOrdered = user?.email ? orderedUsers.includes(user.email) : false;
+
   useEffect(() => {
-    localStorage.setItem('hasOrdered', hasOrdered.toString());
-  }, [hasOrdered]);
+    localStorage.setItem('orderedUsers', JSON.stringify(orderedUsers));
+  }, [orderedUsers]);
+
+  const checkUserOrdered = (email: string) => {
+    return orderedUsers.includes(email);
+  };
+
+  const markUserOrdered = (email: string) => {
+    if (!orderedUsers.includes(email)) {
+      setOrderedUsers(prev => [...prev, email]);
+    }
+  };
+
+  const setHasOrdered = (value: boolean) => {
+    if (user?.email) {
+      if (value) {
+        markUserOrdered(user.email);
+      } else {
+        setOrderedUsers(prev => prev.filter(e => e !== user.email));
+      }
+    }
+  };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     // Only allow one item (macro pad) in cart
@@ -65,7 +93,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       totalPrice,
       itemCount,
       hasOrdered,
-      setHasOrdered
+      setHasOrdered,
+      checkUserOrdered,
+      markUserOrdered
     }}>
       {children}
     </CartContext.Provider>

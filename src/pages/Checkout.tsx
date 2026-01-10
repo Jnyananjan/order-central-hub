@@ -100,9 +100,9 @@ const Checkout = () => {
 
     const options = {
       key: RAZORPAY_KEY_ID,
-      amount: amountInPaise,
+      amount: items[0]?.price * 100,
       currency: 'INR',
-      name: 'MacroPad Pro',
+      name: 'Techy Pad',
       description: 'Pre-Order Payment',
       order_id: '',
       handler: async function(response: any) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, Mail, MapPin, Phone } from 'lucide-react';
+import { ArrowLeft, Send, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -146,40 +146,9 @@ const Contact = () => {
                   <div>
                     <h3 className="font-display font-semibold mb-1">Email Us</h3>
                     <p className="text-muted-foreground mb-2">Our team is ready to help</p>
-                    <a href="mailto:support@macropad.com" className="text-blue-500 hover:text-blue-400 font-medium">
-                      support@macropad.com
+                    <a href="mailto:support@techypad.com" className="text-blue-500 hover:text-blue-400 font-medium">
+                      support@techypad.com
                     </a>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-card p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-green-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold mb-1">Phone Support</h3>
-                    <p className="text-muted-foreground mb-2">Mon-Fri from 9am to 6pm IST</p>
-                    <a href="tel:+911234567890" className="text-green-500 hover:text-green-400 font-medium">
-                      +91 123 456 7890
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass-card p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold mb-1">Our Office</h3>
-                    <p className="text-muted-foreground">
-                      123 Tech Park, Electronic City<br />
-                      Bangalore, Karnataka 560100<br />
-                      India
-                    </p>
                   </div>
                 </div>
               </div>
@@ -190,6 +159,16 @@ const Contact = () => {
                   We typically respond within 24 hours on business days. For urgent matters, 
                   please mention "URGENT" in your subject line.
                 </p>
+              </div>
+
+              <div className="glass-card p-6">
+                <h3 className="font-display font-semibold mb-3">Frequently Asked Topics</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• Pre-order status and shipping updates</li>
+                  <li>• Product specifications and compatibility</li>
+                  <li>• Software and firmware support</li>
+                  <li>• Returns and warranty inquiries</li>
+                </ul>
               </div>
             </motion.div>
           </div>
