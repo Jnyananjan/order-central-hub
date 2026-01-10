@@ -146,15 +146,26 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             setOrders(prev => [payload.new as Order, ...prev]);
+            setUserOrders(prev => [payload.new as Order, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
+            const updatedOrder = payload.new as Order;
             setOrders(prev => 
               prev.map(order => 
-                order.id === (payload.new as Order).id ? payload.new as Order : order
+                order.id === updatedOrder.id ? updatedOrder : order
+              )
+            );
+            setUserOrders(prev => 
+              prev.map(order => 
+                order.id === updatedOrder.id ? updatedOrder : order
               )
             );
           } else if (payload.eventType === 'DELETE') {
+            const deletedOrder = payload.old as Order;
             setOrders(prev => 
-              prev.filter(order => order.id !== (payload.old as Order).id)
+              prev.filter(order => order.id !== deletedOrder.id)
+            );
+            setUserOrders(prev => 
+              prev.filter(order => order.id !== deletedOrder.id)
             );
           }
         }

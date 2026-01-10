@@ -32,24 +32,35 @@ const Orders = () => {
     }
 
     setCancellingId(order.id);
-    const success = await cancelOrder(order.id);
-    
-    if (success) {
-      toast({
-        title: 'Order Cancelled',
-        description: 'Your order has been cancelled successfully.',
-      });
-      if (user?.email) {
-        fetchUserOrders(user.email);
+    try {
+      const success = await cancelOrder(order.id);
+      
+      if (success) {
+        toast({
+          title: 'Order Cancelled',
+          description: 'Your order has been cancelled successfully.',
+        });
+        // Refetch to ensure UI is updated
+        if (user?.email) {
+          await fetchUserOrders(user.email);
+        }
+      } else {
+        toast({
+          title: 'Cancellation Failed',
+          description: 'Unable to cancel the order. Please try again or contact support.',
+          variant: 'destructive'
+        });
       }
-    } else {
+    } catch (error) {
+      console.error('Error cancelling order:', error);
       toast({
-        title: 'Cancellation Failed',
-        description: 'Unable to cancel the order. Please try again or contact support.',
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
         variant: 'destructive'
       });
+    } finally {
+      setCancellingId(null);
     }
-    setCancellingId(null);
   };
 
   const canCancel = (status: string) => {
