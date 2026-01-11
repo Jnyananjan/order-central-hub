@@ -3,27 +3,27 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { PRODUCT_CONFIG, getDiscountPercent } from '@/config/products';
 import macropadHero from '@/assets/macropad-hero.png';
-
-const ORIGINAL_PRICE = 10000;
-const SALE_PRICE = 6499;
-const DISCOUNT_PERCENT = Math.round(((ORIGINAL_PRICE - SALE_PRICE) / ORIGINAL_PRICE) * 100);
 
 const Hero = () => {
   const { addToCart, isInCart, hasOrdered } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const { salePrice, originalPrice, name, id } = PRODUCT_CONFIG.TECHY_PAD;
+  const discountPercent = getDiscountPercent();
+
   const handlePreOrder = () => {
     if (!user) {
       navigate('/auth');
       return;
     }
-    if (!isInCart('techypad-pro') && !hasOrdered) {
+    if (!isInCart(id) && !hasOrdered) {
       addToCart({
-        id: 'techypad-pro',
-        name: 'Techy Pad',
-        price: SALE_PRICE,
+        id,
+        name,
+        price: salePrice,
         image: macropadHero
       });
     }
@@ -70,10 +70,10 @@ const Hero = () => {
               transition={{ delay: 0.35 }}
               className="mb-8 flex items-center gap-4"
             >
-              <span className="text-3xl font-bold text-foreground">{formatPrice(SALE_PRICE)}</span>
-              <span className="text-xl text-muted-foreground line-through">{formatPrice(ORIGINAL_PRICE)}</span>
+              <span className="text-3xl font-bold text-foreground">{formatPrice(salePrice)}</span>
+              <span className="text-xl text-muted-foreground line-through">{formatPrice(originalPrice)}</span>
               <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm font-semibold">
-                {DISCOUNT_PERCENT}% OFF
+                {discountPercent}% OFF
               </span>
             </motion.div>
 
@@ -91,7 +91,7 @@ const Hero = () => {
                 >
                   Already Ordered
                 </Button>
-              ) : isInCart('techypad-pro') ? (
+              ) : isInCart(id) ? (
                 <Link to="/cart">
                   <Button
                     size="lg"
@@ -106,7 +106,7 @@ const Hero = () => {
                   className="text-base px-10 bg-foreground text-background hover:bg-foreground/90 font-semibold"
                   onClick={handlePreOrder}
                 >
-                  {user ? `Pre-Order Now — ${formatPrice(SALE_PRICE)}` : 'Sign In to Pre-Order'}
+                  {user ? `Pre-Order Now — ${formatPrice(salePrice)}` : 'Sign In to Pre-Order'}
                 </Button>
               )}
               <a href="#features">
@@ -128,7 +128,7 @@ const Hero = () => {
               <div className="relative bg-background">
                 <img
                   src={macropadHero}
-                  alt="Techy Pad"
+                  alt={name}
                   className="w-full h-full object-contain mix-blend-lighten"
                 />
               </div>
@@ -149,7 +149,7 @@ const Hero = () => {
               <div className="relative bg-background">
                 <img
                   src={macropadHero}
-                  alt="Techy Pad"
+                  alt={name}
                   className="w-full h-full object-contain mix-blend-lighten"
                 />
               </div>
@@ -188,10 +188,10 @@ const Hero = () => {
               transition={{ delay: 0.55 }}
               className="mb-8 flex items-center justify-center gap-3 flex-wrap"
             >
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">{formatPrice(SALE_PRICE)}</span>
-              <span className="text-lg text-muted-foreground line-through">{formatPrice(ORIGINAL_PRICE)}</span>
+              <span className="text-2xl sm:text-3xl font-bold text-foreground">{formatPrice(salePrice)}</span>
+              <span className="text-lg text-muted-foreground line-through">{formatPrice(originalPrice)}</span>
               <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-full text-sm font-semibold">
-                {DISCOUNT_PERCENT}% OFF
+                {discountPercent}% OFF
               </span>
             </motion.div>
 
@@ -209,7 +209,7 @@ const Hero = () => {
                 >
                   Already Ordered
                 </Button>
-              ) : isInCart('techypad-pro') ? (
+              ) : isInCart(id) ? (
                 <Link to="/cart">
                   <Button
                     size="lg"
@@ -224,7 +224,7 @@ const Hero = () => {
                   className="text-base px-10 bg-foreground text-background hover:bg-foreground/90 font-semibold"
                   onClick={handlePreOrder}
                 >
-                  {user ? `Pre-Order Now — ${formatPrice(SALE_PRICE)}` : 'Sign In to Pre-Order'}
+                  {user ? `Pre-Order Now — ${formatPrice(salePrice)}` : 'Sign In to Pre-Order'}
                 </Button>
               )}
               <a href="#features">
