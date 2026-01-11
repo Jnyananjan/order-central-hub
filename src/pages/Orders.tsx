@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, ArrowLeft, X } from 'lucide-react';
+import { Package, ArrowLeft, X, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -19,7 +19,7 @@ const Orders = () => {
     if (user?.email) {
       fetchUserOrders(user.email);
     }
-  }, [user]);
+  }, [user?.email]);
 
   const handleCancelOrder = async (order: Order) => {
     if (order.order_status !== 'confirmed' && order.order_status !== 'pending') {
@@ -40,10 +40,6 @@ const Orders = () => {
           title: 'Order Cancelled',
           description: 'Your order has been cancelled successfully.',
         });
-        // Refetch to ensure UI is updated
-        if (user?.email) {
-          await fetchUserOrders(user.email);
-        }
       } else {
         toast({
           title: 'Cancellation Failed',
@@ -132,13 +128,30 @@ const Orders = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Tracking Link - Only shown if available */}
+                  {order.tracking_link && (
+                    <div className="mb-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                      <p className="text-sm text-muted-foreground mb-1">Tracking</p>
+                      <a
+                        href={order.tracking_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-blue-500 hover:text-blue-400 font-medium transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Track Your Order
+                      </a>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center pt-4 border-t border-border/50">
                     <div>
                       <p className="font-medium">{order.product_name}</p>
                       <p className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <p className="font-display font-bold text-xl">${order.total_amount}</p>
+                      <p className="font-display font-bold text-xl">₹{order.total_amount.toLocaleString()}</p>
                       {canCancel(order.order_status) && (
                         <Button
                           variant="outline"
