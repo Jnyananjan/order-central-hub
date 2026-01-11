@@ -9,6 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 const Cart = () => {
   const { items, removeFromCart, totalPrice } = useCart();
 
+  const formatPrice = (price: number) => `₹${price.toLocaleString()}`;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -23,7 +25,7 @@ const Cart = () => {
               <div className="glass-card p-12 text-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h2 className="font-display text-xl font-semibold mb-2">Your cart is empty</h2>
-                <p className="text-muted-foreground mb-6">Looks like you haven't added the MacroPad Pro yet.</p>
+                <p className="text-muted-foreground mb-6">Looks like you haven't added the Techy Pad yet.</p>
                 <Link to="/"><Button className="gap-2">Browse Products</Button></Link>
               </div>
             ) : (
@@ -38,7 +40,7 @@ const Cart = () => {
                       <p className="text-muted-foreground">Quantity: {item.quantity}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <p className="font-display text-xl font-bold">${item.price}</p>
+                      <p className="font-display text-xl font-bold">{formatPrice(item.price)}</p>
                       <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-5 h-5" />
                       </Button>
@@ -48,7 +50,7 @@ const Cart = () => {
                 <div className="glass-card p-6">
                   <div className="flex justify-between items-center mb-6">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-display text-2xl font-bold">${totalPrice}</span>
+                    <span className="font-display text-2xl font-bold">{formatPrice(totalPrice)}</span>
                   </div>
                   <Link to="/checkout"><Button className="w-full" size="lg">Proceed to Checkout</Button></Link>
                 </div>

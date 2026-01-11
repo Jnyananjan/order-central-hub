@@ -19,6 +19,7 @@ export interface Order {
   payment_id: string;
   payment_status: string;
   order_status: string;
+  tracking_link?: string;
   created_at: string;
 }
 
@@ -30,6 +31,8 @@ interface OrderContextType {
   fetchUserOrders: (email: string) => Promise<void>;
   addOrder: (order: Omit<Order, 'id' | 'created_at'>) => Promise<Order | null>;
   cancelOrder: (orderId: string) => Promise<boolean>;
+  updateOrderStatus: (orderId: string, status: string) => Promise<boolean>;
+  updateTrackingLink: (orderId: string, trackingLink: string) => Promise<boolean>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -59,7 +62,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchUserOrders = async (email: string) => {
-    if (!supabaseConfigured) return;
+    if (!supabaseConfigured || !email) return;
     
     setLoading(true);
     try {
@@ -93,8 +96,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // Update local state
       setOrders(prev => [data, ...prev]);
+      setUserOrders(prev => [data, ...prev]);
       return data;
     } catch (error) {
       console.error('Error adding order:', error);
@@ -103,29 +106,81 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const cancelOrder = async (orderId: string): Promise<boolean> => {
-    if (!supabaseConfigured) {
-      console.warn('Supabase not configured');
+    if (!supabaseConfigured || !orderId) {
+      console.warn('Supabase not configured or invalid orderId');
       return false;
     }
     
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .update({ order_status: 'cancelled' })
+        .eq('id', orderId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Update local state immediately with the returned data
+      if (data) {
+        setOrders(prev => prev.map(order => 
+          order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+        ));
+        setUserOrders(prev => prev.map(order => 
+          order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+        ));
+      }
+      return true;
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      return false;
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string): Promise<boolean> => {
+    if (!supabaseConfigured || !orderId) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ order_status: status })
         .eq('id', orderId);
 
       if (error) throw error;
       
-      // Update local state
       setOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+        order.id === orderId ? { ...order, order_status: status } : order
       ));
       setUserOrders(prev => prev.map(order => 
-        order.id === orderId ? { ...order, order_status: 'cancelled' } : order
+        order.id === orderId ? { ...order, order_status: status } : order
       ));
       return true;
     } catch (error) {
-      console.error('Error cancelling order:', error);
+      console.error('Error updating order status:', error);
+      return false;
+    }
+  };
+
+  const updateTrackingLink = async (orderId: string, trackingLink: string): Promise<boolean> => {
+    if (!supabaseConfigured || !orderId) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ tracking_link: trackingLink })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, tracking_link: trackingLink } : order
+      ));
+      setUserOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, tracking_link: trackingLink } : order
+      ));
+      return true;
+    } catch (error) {
+      console.error('Error updating tracking link:', error);
       return false;
     }
   };
@@ -145,8 +200,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setOrders(prev => [payload.new as Order, ...prev]);
-            setUserOrders(prev => [payload.new as Order, ...prev]);
+            const newOrder = payload.new as Order;
+            setOrders(prev => {
+              if (prev.some(o => o.id === newOrder.id)) return prev;
+              return [newOrder, ...prev];
+            });
+            setUserOrders(prev => {
+              if (prev.some(o => o.id === newOrder.id)) return prev;
+              return [newOrder, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updatedOrder = payload.new as Order;
             setOrders(prev => 
@@ -185,7 +247,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       fetchOrders,
       fetchUserOrders,
       addOrder,
-      cancelOrder
+      cancelOrder,
+      updateOrderStatus,
+      updateTrackingLink
     }}>
       {children}
     </OrderContext.Provider>

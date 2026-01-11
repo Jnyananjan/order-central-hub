@@ -2,18 +2,16 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCurrency } from '@/contexts/CurrencyContext';
 import { Link, useNavigate } from 'react-router-dom';
 import macropadHero from '@/assets/macropad-hero.png';
 
-const ORIGINAL_PRICE = 10000; // INR
-const SALE_PRICE = 7499; // INR
+const ORIGINAL_PRICE = 10000;
+const SALE_PRICE = 6499;
 const DISCOUNT_PERCENT = Math.round(((ORIGINAL_PRICE - SALE_PRICE) / ORIGINAL_PRICE) * 100);
 
 const Hero = () => {
   const { addToCart, isInCart, hasOrdered } = useCart();
   const { user } = useAuth();
-  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   const handlePreOrder = () => {
@@ -31,15 +29,15 @@ const Hero = () => {
     }
   };
 
+  const formatPrice = (price: number) => `₹${price.toLocaleString()}`;
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 bg-background">
-      {/* Minimal white glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[400px] md:w-[500px] h-[300px] sm:h-[400px] md:h-[500px] bg-foreground/5 rounded-full blur-[100px]" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Desktop Layout - Side by Side */}
+        {/* Desktop Layout */}
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
-          {/* Text Content - Left Side */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -66,7 +64,6 @@ const Hero = () => {
               and endless customization. Designed for creators, developers, and power users.
             </motion.p>
 
-            {/* Price Display */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -120,7 +117,6 @@ const Hero = () => {
             </motion.div>
           </motion.div>
 
-          {/* Product Image - Right Side */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -140,9 +136,8 @@ const Hero = () => {
           </motion.div>
         </div>
 
-        {/* Mobile/Tablet Layout - Stacked */}
+        {/* Mobile Layout */}
         <div className="lg:hidden">
-          {/* Large Product Image First */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -161,7 +156,6 @@ const Hero = () => {
             </div>
           </motion.div>
 
-          {/* Content below image */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -188,7 +182,6 @@ const Hero = () => {
               and endless customization. Designed for creators, developers, and power users.
             </motion.p>
 
-            {/* Price Display Mobile */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

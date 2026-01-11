@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { OrderProvider } from "@/contexts/OrderContext";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Cart from "./pages/Cart";
@@ -31,38 +30,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <CurrencyProvider>
-        <CartProvider>
-          <OrderProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ScrollToTop />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/payment-failed" element={<PaymentFailed />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/setup" element={<Setup />} />
-                  <Route path="/updates" element={<Updates />} />
-                  <Route path="/updates/:id" element={<UpdateDetail />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/terms-of-service" element={<TermsOfService />} />
-                  <Route path="/return-policy" element={<ReturnPolicy />} />
-                  <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </OrderProvider>
-        </CartProvider>
-      </CurrencyProvider>
+      <CartProvider>
+        <OrderProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/payment-failed" element={<PaymentFailed />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/setup" element={<Setup />} />
+                <Route path="/updates" element={<Updates />} />
+                <Route path="/updates/:id" element={<UpdateDetail />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/return-policy" element={<ReturnPolicy />} />
+                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </OrderProvider>
+      </CartProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

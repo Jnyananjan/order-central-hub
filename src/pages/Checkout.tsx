@@ -12,12 +12,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOrders } from '@/contexts/OrderContext';
 import { useToast } from '@/hooks/use-toast';
 import { RAZORPAY_KEY_ID, razorpayConfigured } from '@/config/razorpay';
+import { z } from 'zod';
 
 declare global {
   interface Window {
     Razorpay: any;
   }
 }
+
+// Validation schema
+const checkoutSchema = z.object({
+  firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name too long'),
+  lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name too long'),
+  email: z.string().trim().email('Invalid email address').max(100, 'Email too long'),
+  phone: z.string().trim().min(10, 'Phone must be at least 10 digits').max(15, 'Phone too long').regex(/^[0-9+\-\s()]+$/, 'Invalid phone number'),
+  address: z.string().trim().min(5, 'Address is required').max(200, 'Address too long'),
+  city: z.string().trim().min(2, 'City is required').max(50, 'City name too long'),
+  state: z.string().trim().min(2, 'State is required').max(50, 'State name too long'),
+  zip: z.string().trim().regex(/^[0-9]{6}$/, 'PIN code must be exactly 6 digits'),
+  country: z.string().trim().min(2, 'Country is required').max(50, 'Country name too long'),
+});
 
 const Checkout = () => {
   const { items, totalPrice, clearCart, setHasOrdered } = useCart();
@@ -26,6 +40,7 @@ const Checkout = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,10 +55,20 @@ const Checkout = () => {
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.id]: e.target.value
-    }));
+    const { id, value } = e.target;
+    
+    // For ZIP, only allow numbers and max 6 digits
+    if (id === 'zip') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 6);
+      setFormData(prev => ({ ...prev, [id]: numericValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [id]: value }));
+    }
+    
+    // Clear error when user starts typing
+    if (errors[id]) {
+      setErrors(prev => ({ ...prev, [id]: '' }));
+    }
   };
 
   const loadRazorpay = (): Promise<boolean> => {
@@ -60,6 +85,25 @@ const Checkout = () => {
     });
   };
 
+  const validateForm = () => {
+    try {
+      checkoutSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -70,6 +114,15 @@ const Checkout = () => {
         variant: 'destructive'
       });
       navigate('/auth');
+      return;
+    }
+
+    if (!validateForm()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fix the errors in the form.',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -96,11 +149,11 @@ const Checkout = () => {
     }
 
     const orderId = `ORD-${Date.now()}`;
-    const amountInPaise = totalPrice * 100;
+    const itemPrice = items[0]?.price || 6499;
 
     const options = {
       key: RAZORPAY_KEY_ID,
-      amount: items[0]?.price * 100,
+      amount: itemPrice * 100,
       currency: 'INR',
       name: 'Techy Pad',
       description: 'Pre-Order Payment',
@@ -108,18 +161,18 @@ const Checkout = () => {
       handler: async function(response: any) {
         const order = {
           order_id: orderId,
-          customer_name: `${formData.firstName} ${formData.lastName}`,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
-          shipping_address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zip_code: formData.zip,
-          country: formData.country,
-          product_name: items[0]?.name || 'MacroPad Pro',
-          product_price: items[0]?.price || 149,
+          customer_name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+          customer_email: formData.email.trim(),
+          customer_phone: formData.phone.trim(),
+          shipping_address: formData.address.trim(),
+          city: formData.city.trim(),
+          state: formData.state.trim(),
+          zip_code: formData.zip.trim(),
+          country: formData.country.trim(),
+          product_name: items[0]?.name || 'Techy Pad',
+          product_price: itemPrice,
           quantity: 1,
-          total_amount: totalPrice,
+          total_amount: itemPrice,
           payment_id: response.razorpay_payment_id,
           payment_status: 'completed',
           order_status: 'confirmed'
@@ -137,9 +190,9 @@ const Checkout = () => {
         }
       },
       prefill: {
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        contact: formData.phone
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        email: formData.email.trim(),
+        contact: formData.phone.trim()
       },
       theme: { color: '#ffffff' }
     };
@@ -151,6 +204,8 @@ const Checkout = () => {
     razorpay.open();
     setIsProcessing(false);
   };
+
+  const formatPrice = (price: number) => `₹${price.toLocaleString()}`;
 
   if (!user) {
     return (
@@ -202,22 +257,67 @@ const Checkout = () => {
                   </div>
                   <div className="grid gap-4">
                     <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2"><Label htmlFor="firstName">First Name</Label><Input id="firstName" value={formData.firstName} onChange={handleInputChange} required /></div>
-                      <div className="space-y-2"><Label htmlFor="lastName">Last Name</Label><Input id="lastName" value={formData.lastName} onChange={handleInputChange} required /></div>
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input id="firstName" value={formData.firstName} onChange={handleInputChange} className={errors.firstName ? 'border-destructive' : ''} />
+                        {errors.firstName && <p className="text-destructive text-sm">{errors.firstName}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input id="lastName" value={formData.lastName} onChange={handleInputChange} className={errors.lastName ? 'border-destructive' : ''} />
+                        {errors.lastName && <p className="text-destructive text-sm">{errors.lastName}</p>}
+                      </div>
                     </div>
-                    <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={formData.email} onChange={handleInputChange} required /></div>
-                    <div className="space-y-2"><Label htmlFor="phone">Phone Number</Label><Input id="phone" type="tel" value={formData.phone} onChange={handleInputChange} required /></div>
-                    <div className="space-y-2"><Label htmlFor="address">Address</Label><Input id="address" value={formData.address} onChange={handleInputChange} required /></div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={formData.email} onChange={handleInputChange} className={errors.email ? 'border-destructive' : ''} />
+                      {errors.email && <p className="text-destructive text-sm">{errors.email}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input id="phone" type="tel" value={formData.phone} onChange={handleInputChange} className={errors.phone ? 'border-destructive' : ''} />
+                      {errors.phone && <p className="text-destructive text-sm">{errors.phone}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input id="address" value={formData.address} onChange={handleInputChange} className={errors.address ? 'border-destructive' : ''} />
+                      {errors.address && <p className="text-destructive text-sm">{errors.address}</p>}
+                    </div>
                     <div className="grid sm:grid-cols-3 gap-4">
-                      <div className="space-y-2"><Label htmlFor="city">City</Label><Input id="city" value={formData.city} onChange={handleInputChange} required /></div>
-                      <div className="space-y-2"><Label htmlFor="state">State</Label><Input id="state" value={formData.state} onChange={handleInputChange} required /></div>
-                      <div className="space-y-2"><Label htmlFor="zip">ZIP Code</Label><Input id="zip" value={formData.zip} onChange={handleInputChange} required /></div>
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input id="city" value={formData.city} onChange={handleInputChange} className={errors.city ? 'border-destructive' : ''} />
+                        {errors.city && <p className="text-destructive text-sm">{errors.city}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state">State</Label>
+                        <Input id="state" value={formData.state} onChange={handleInputChange} className={errors.state ? 'border-destructive' : ''} />
+                        {errors.state && <p className="text-destructive text-sm">{errors.state}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zip">PIN Code (6 digits)</Label>
+                        <Input 
+                          id="zip" 
+                          value={formData.zip} 
+                          onChange={handleInputChange} 
+                          className={errors.zip ? 'border-destructive' : ''} 
+                          maxLength={6}
+                          inputMode="numeric"
+                          pattern="[0-9]{6}"
+                          placeholder="123456"
+                        />
+                        {errors.zip && <p className="text-destructive text-sm">{errors.zip}</p>}
+                      </div>
                     </div>
-                    <div className="space-y-2"><Label htmlFor="country">Country</Label><Input id="country" value={formData.country} onChange={handleInputChange} required /></div>
+                    <div className="space-y-2">
+                      <Label htmlFor="country">Country</Label>
+                      <Input id="country" value={formData.country} onChange={handleInputChange} className={errors.country ? 'border-destructive' : ''} />
+                      {errors.country && <p className="text-destructive text-sm">{errors.country}</p>}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground"><Shield className="w-4 h-4" /><span>Secure payment via Razorpay</span></div>
-                <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>{isProcessing ? 'Processing...' : `Pay ₹${totalPrice * 83}`}</Button>
+                <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>{isProcessing ? 'Processing...' : `Pay ${formatPrice(totalPrice)}`}</Button>
               </form>
               <div className="glass-card p-6 sticky top-24">
                 <h2 className="font-display font-semibold text-lg mb-6">Order Summary</h2>
@@ -227,13 +327,13 @@ const Checkout = () => {
                       <img src={item.image} alt={item.name} className="w-12 h-12 object-contain" />
                     </div>
                     <div className="flex-1"><h3 className="font-medium">{item.name}</h3><p className="text-sm text-muted-foreground">Qty: {item.quantity}</p></div>
-                    <p className="font-semibold">${item.price}</p>
+                    <p className="font-semibold">{formatPrice(item.price)}</p>
                   </div>
                 ))}
                 <div className="space-y-3 mt-6">
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>${totalPrice}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(totalPrice)}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Shipping</span><span>Free</span></div>
-                  <div className="border-t border-border/50 pt-3 flex justify-between"><span className="font-semibold">Total</span><span className="font-display font-bold text-xl">${totalPrice}</span></div>
+                  <div className="border-t border-border/50 pt-3 flex justify-between"><span className="font-semibold">Total</span><span className="font-display font-bold text-xl">{formatPrice(totalPrice)}</span></div>
                 </div>
               </div>
             </div>
