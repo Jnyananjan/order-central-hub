@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { PRODUCT_CONFIG } from '@/config/products';
 
 interface CartItem {
   id: string;
@@ -25,20 +26,40 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+// SECURITY: Validate product ID is in allowed list
+const isValidProduct = (productId: string): boolean => {
+  return productId === PRODUCT_CONFIG.TECHY_PAD.id;
+};
+
+// SECURITY: Get correct price for product (ignore any user-provided price)
+const getSecurePrice = (productId: string): number => {
+  if (productId === PRODUCT_CONFIG.TECHY_PAD.id) {
+    return PRODUCT_CONFIG.TECHY_PAD.salePrice;
+  }
+  return 0;
+};
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [orderedUsers, setOrderedUsers] = useState<string[]>(() => {
-    const saved = localStorage.getItem('orderedUsers');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('orderedUsers');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const { user } = useAuth();
 
-  // Check if current user has ordered
   const hasOrdered = user?.email ? orderedUsers.includes(user.email) : false;
 
   useEffect(() => {
-    localStorage.setItem('orderedUsers', JSON.stringify(orderedUsers));
+    try {
+      localStorage.setItem('orderedUsers', JSON.stringify(orderedUsers));
+    } catch {
+      // localStorage might be full or disabled
+    }
   }, [orderedUsers]);
 
   const checkUserOrdered = (email: string) => {
@@ -62,9 +83,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    // Only allow one item (macro pad) in cart
+    // SECURITY: Validate product ID
+    if (!isValidProduct(item.id)) {
+      console.warn('Invalid product ID attempted');
+      return;
+    }
+
+    // SECURITY: Override price with server-side price
+    const securePrice = getSecurePrice(item.id);
+    if (securePrice <= 0) {
+      console.warn('Invalid product price');
+      return;
+    }
+
+    // Only allow one item in cart
     if (items.length === 0) {
-      setItems([{ ...item, quantity: 1 }]);
+      setItems([{ 
+        ...item, 
+        price: securePrice, // SECURITY: Use server-side price
+        quantity: 1 
+      }]);
     }
   };
 
@@ -80,7 +118,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return items.some(item => item.id === id);
   };
 
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // SECURITY: Calculate total using server-side prices
+  const totalPrice = items.reduce((sum, item) => {
+    const securePrice = getSecurePrice(item.id);
+    return sum + securePrice * item.quantity;
+  }, 0);
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (

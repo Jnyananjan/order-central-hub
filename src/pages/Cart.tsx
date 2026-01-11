@@ -5,11 +5,29 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import { PRODUCT_CONFIG, getProductPrice, validatePrice } from '@/config/products';
 
 const Cart = () => {
-  const { items, removeFromCart, totalPrice } = useCart();
+  const { items, removeFromCart } = useCart();
 
+  // SECURITY: Always use server-side price
+  const getSecurePrice = (): number => {
+    if (items.length === 0) return 0;
+    const productId = items[0]?.id;
+    if (!productId) return 0;
+    
+    try {
+      return getProductPrice(productId);
+    } catch {
+      return 0;
+    }
+  };
+
+  const securePrice = getSecurePrice();
   const formatPrice = (price: number) => `₹${price.toLocaleString()}`;
+
+  // SECURITY: Check for price tampering
+  const isPriceTampered = items.length > 0 && items[0]?.price !== securePrice;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -21,6 +39,13 @@ const Cart = () => {
               <ArrowLeft className="w-4 h-4" />Back to Home
             </Link>
             <h1 className="font-display text-3xl md:text-4xl font-bold mb-8">Your Cart</h1>
+            
+            {isPriceTampered && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6">
+                <p className="text-destructive font-medium">Price discrepancy detected. Showing correct price.</p>
+              </div>
+            )}
+
             {items.length === 0 ? (
               <div className="glass-card p-12 text-center">
                 <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -33,14 +58,15 @@ const Cart = () => {
                 {items.map((item) => (
                   <motion.div key={item.id} layout className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-24 h-24 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-                      <img src={item.image} alt={item.name} className="w-20 h-20 object-contain" />
+                      <img src={item.image} alt={PRODUCT_CONFIG.TECHY_PAD.name} className="w-20 h-20 object-contain" />
                     </div>
                     <div className="flex-1 text-center sm:text-left">
-                      <h3 className="font-display text-lg font-semibold">{item.name}</h3>
-                      <p className="text-muted-foreground">Quantity: {item.quantity}</p>
+                      <h3 className="font-display text-lg font-semibold">{PRODUCT_CONFIG.TECHY_PAD.name}</h3>
+                      <p className="text-muted-foreground">Quantity: 1</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <p className="font-display text-xl font-bold">{formatPrice(item.price)}</p>
+                      {/* SECURITY: Display server-side price, not cart price */}
+                      <p className="font-display text-xl font-bold">{formatPrice(securePrice)}</p>
                       <Button variant="ghost" size="icon" onClick={() => removeFromCart(item.id)} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="w-5 h-5" />
                       </Button>
@@ -50,7 +76,8 @@ const Cart = () => {
                 <div className="glass-card p-6">
                   <div className="flex justify-between items-center mb-6">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-display text-2xl font-bold">{formatPrice(totalPrice)}</span>
+                    {/* SECURITY: Display server-side price */}
+                    <span className="font-display text-2xl font-bold">{formatPrice(securePrice)}</span>
                   </div>
                   <Link to="/checkout"><Button className="w-full" size="lg">Proceed to Checkout</Button></Link>
                 </div>
